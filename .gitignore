@@ -1,0 +1,9 @@
+# Working directories
+*__WORKDIR__
+
+# Designs
+*DSN*
+
+# solution and restart files
+*solution_*
+*restart_*
