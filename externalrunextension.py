@@ -89,6 +89,7 @@ class ExternalSU2CFDSingleZoneDriverWithRestartOption(ExternalRunWithPreAndPostP
         if os.path.exists(restart):
             shutil.move( restart , solution )
     #end
+
     def enableRestart(self):
         if self._numberOfSuccessfulRuns == 0:
             self._numberOfSuccessfulRuns += 1

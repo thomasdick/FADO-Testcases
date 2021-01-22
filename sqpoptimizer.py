@@ -64,14 +64,18 @@ def SQPconstrained(x0, func, f_eqcons, f_ieqcons, fprime, fprime_eqcons, fprime_
 
             # expand inequality constraints by bounds
             if xb is None:
-                xb = [-1e-1, 1e-1]
+                xb = [[-1e-1]*len(p), [1e-1]*len(p)]
+            else:
+                #unzip the list
+                xb = list(zip(*xb))
+
             Id = np.identity(len(p))
             if np.size(C) > 0:
                 G = cvxopt.matrix(np.block([[-D_C], [-Id], [Id]]))
-                h = cvxopt.matrix(np.append(C, np.append([-xb[0]]*len(p), [xb[1]]*len(p))))
+                h = cvxopt.matrix(np.append(C,np.append(xb[0], xb[1])))
             else:
                 G = cvxopt.matrix(np.block([[-Id], [Id]]))
-                h = cvxopt.matrix(np.append([-xb[0]]*len(p), [xb[1]]*len(p)))
+                h = cvxopt.matrix(np.append(xb[0], xb[1]))
 
             # pack objective function
             P = cvxopt.matrix(H_F)
