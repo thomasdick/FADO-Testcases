@@ -25,7 +25,7 @@ pType_ObjFun_DRAG = Parameter(["DRAG"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_LIFT = Parameter(["LIFT"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_MOMENT_Z = Parameter(["MOMENT_Z"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 
-pType_Iter_run = Parameter(["1000"],LabelReplacer("__NUM_ITER__"))
+pType_Iter_run = Parameter(["10"],LabelReplacer("__NUM_ITER__"))
 pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
 
 ### FOR MESH DEFORMATION ###
@@ -218,7 +218,7 @@ xb_up  = [float(bound_upper)]*driver._nVar      # upper dv bound it includes the
 xbounds = list(zip(xb_low, xb_up)) # design bounds
 
 # scale accuracy
-eps = 1.0e-04
+eps = 1.0e-010
 
 driver.setConstraintGradientEvalMode(False)
 

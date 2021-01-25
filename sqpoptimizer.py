@@ -36,6 +36,13 @@ def SQPconstrained(x0, func, f_eqcons, f_ieqcons, fprime, fprime_eqcons, fprime_
     err = 2*acc+1
     step = 1
 
+    # extract design parameter bounds
+    if xb is None:
+        xb = [[-1e-1]*len(p), [1e-1]*len(p)]
+    else:
+        #unzip the list
+        xb = list(zip(*xb))
+
     # prepare output, using 'with' command to automatically close the file in case of exceptions
     with open("optimizer_history.csv", "w") as outfile:
         csv_writer = csv.writer(outfile, delimiter=',')
@@ -63,19 +70,13 @@ def SQPconstrained(x0, func, f_eqcons, f_ieqcons, fprime, fprime_eqcons, fprime_
                 b = cvxopt.matrix(-E)
 
             # expand inequality constraints by bounds
-            if xb is None:
-                xb = [[-1e-1]*len(p), [1e-1]*len(p)]
-            else:
-                #unzip the list
-                xb = list(zip(*xb))
-
             Id = np.identity(len(p))
             if np.size(C) > 0:
                 G = cvxopt.matrix(np.block([[-D_C], [-Id], [Id]]))
-                h = cvxopt.matrix(np.append(C,np.append(xb[0], xb[1])))
+                h = cvxopt.matrix(np.append(C,np.append( -np.array(xb[0]), np.array(xb[1]))))
             else:
                 G = cvxopt.matrix(np.block([[-Id], [Id]]))
-                h = cvxopt.matrix(np.append(xb[0], xb[1]))
+                h = cvxopt.matrix(np.append( -np.array(xb[0]), np.array(xb[1])))
 
             # pack objective function
             P = cvxopt.matrix(H_F)
@@ -234,11 +235,13 @@ def linesearch(p, delta_p, F, func, E, f_eqcons, nu_old, nu_new, acc, lsmode):
             if (F_new > F):
                 sys.stdout.write("not a reduction in objective function. \n")
                 delta_p = 0.5*delta_p
-            elif (np.linalg.norm(delta_p, 2) < acc):
-                sys.stdout.write("can't find a good step. \n")
-                criteria = False
             else:
                 sys.stdout.write("descend step accepted. \n")
+                criteria = False
+
+            #avoid step getting to small
+            if (np.linalg.norm(delta_p, 2) < acc):
+                sys.stdout.write("can't find a good step. \n")
                 criteria = False
 
     # backtracking based on the Laplacian
@@ -254,11 +257,13 @@ def linesearch(p, delta_p, F, func, E, f_eqcons, nu_old, nu_new, acc, lsmode):
             if (L_new > (F+nu_old*E)):
                 sys.stdout.write("not a reduction in Lagrangian function. \n")
                 delta_p = 0.5*delta_p
-            elif (np.linalg.norm(delta_p, 2) < acc):
-                sys.stdout.write("can't find a good step. \n")
-                criteria = False
             else:
                 sys.stdout.write("descend step accepted. \n")
+                criteria = False
+
+            #avoid step getting to small
+            if (np.linalg.norm(delta_p, 2) < acc):
+                sys.stdout.write("can't find a good step. \n")
                 criteria = False
 
     # if unknown mode choosen, leave direction unaffected.
