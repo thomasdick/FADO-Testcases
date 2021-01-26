@@ -135,6 +135,49 @@ class ExternalSU2CFDDiscAdjSingleZoneDriverWithRestartOption(ExternalRunWithPreA
     #end
 #end
 
+class ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption(ExternalRunWithPreAndPostProcess):
+    def __init__(self, dir, command, useSymLinks=False, mainConfigName="config_tmpl.cfg"):
+        ExternalRunWithPreAndPostProcess.__init__(self, dir, command, useSymLinks)
+        self._mainConfigName = mainConfigName
+        self._numberOfSuccessfulRuns = 0 #this variable will be used to indicate whether the restart option in config should be YES or NO
+    #end
+
+    def preProcess(self):
+        if self._numberOfSuccessfulRuns > 0:
+              #we are already inside the DIRECT folder, fetch the config and change the RESTART_SOL parameter
+              config = SU2.io.Config(self._mainConfigName)
+              config['RESTART_SOL'] = 'YES'
+              config.dump(self._mainConfigName)
+    #end
+
+    def postProcess(self):
+        self._numberOfSuccessfulRuns += 1
+        #here one has to rename both restart files to solution files that the adjoint solver can use
+        #RESTART TO SOLUTION
+        config = SU2.io.Config(self._mainConfigName)
+        restart  = config.RESTART_FILENAME
+        solution = config.SOLUTION_FILENAME
+        restart_adj  = config.RESTART_ADJ_FILENAME
+        solution_adj = config.SOLUTION_ADJ_FILENAME
+        # add suffix
+        func_name = config.OBJECTIVE_FUNCTION
+        suffix    = SU2.io.get_adjointSuffix(func_name)
+        restart_adj   = SU2.io.add_suffix(restart_adj,suffix)
+        solution_adj  = SU2.io.add_suffix(solution_adj,suffix)
+
+        if os.path.exists(restart):
+            shutil.move( restart , solution )
+            shutil.move( restart_adj , solution_adj )
+    #end
+
+    def enableRestart(self):
+        if self._numberOfSuccessfulRuns == 0:
+            self._numberOfSuccessfulRuns += 1
+            print("RESTART OPTION WILL BE ENABLED ON EXECUTION OF SU2_CFD_AD")
+    #end
+#end
+
+
 class SU2MeshDeformationSkipFirstIteration(ExternalRunWithPreAndPostProcess):
     def __init__(self, dir, command, useSymLinks=False, mainConfigName="config_tmpl.cfg"):
         ExternalRunWithPreAndPostProcess.__init__(self, dir, command, useSymLinks)

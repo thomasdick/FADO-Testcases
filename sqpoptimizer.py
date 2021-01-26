@@ -280,3 +280,9 @@ def linesearch(p, delta_p, F, func, E, f_eqcons, nu_old, nu_new, acc, lsmode):
 def unit_hessian(x):
     return np.identity(np.size(x))
 # end of unit_hessian
+
+
+# we need an empty function call to have a dummy for optimization tests.
+def empty_func(x):
+    return []
+# end of empty_func
