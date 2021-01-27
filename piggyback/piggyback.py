@@ -46,7 +46,7 @@ meshDeformationRun.addParameter(pType_OneShot_passive)
 directRun = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("DIRECT","mpirun -n 4 SU2_CFD_AD naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
 directRun.addConfig("naca0012_config_tmpl.cfg")
 directRun.addData("DEFORM/mesh_NACA0012_inv_def.su2")
-directRun.addData("solution_flow.dat") #dummy solution file
+directRun.addData("solution_flow.dat") #has to be an actual solution file
 directRun.addData("solution_adj_cd.dat") #dummy adj solution file
 directRun.addParameter(pType_adjoint)
 directRun.addParameter(pType_Iter_run)
@@ -115,13 +115,13 @@ adjointSolutionDRAG = "DIRECT/solution_adj_cd.dat"
 pathForAdjointSolutionDRAG = os.path.join(driver._workDir,adjointSolutionDRAG)
 commandAdjointSolutionDRAG = "cp" + " " + pathForAdjointSolutionDRAG + " ."
 print("command 2: ", commandAdjointSolutionDRAG)
-driver.setUserPostProcessFun(commandDirectSolution + "&&" + commandAdjointSolutionDRAG)
+driver.setUserPostProcessGrad(commandDirectSolution + "&&" + commandAdjointSolutionDRAG + "&&" + "echo $PWD")
 
 adjointSolutionLIFT = "ADJOINT_LIFT/solution_adj_cl.dat"
 pathForAdjointSolutionLIFT = os.path.join(driver._workDir,adjointSolutionLIFT)
 commandAdjointSolutionLIFT = "cp" + " " + pathForAdjointSolutionLIFT + " ."
 print("command 3: ", commandAdjointSolutionLIFT)
-driver.setUserPostProcessEqConGrad(commandAdjointSolutionLIFT)
+driver.setUserPostProcessEqConGrad(commandAdjointSolutionLIFT + "&&" + "echo $PWD/DESIGN")
 ### END # Postprocess command ###
 
 driver.preprocess()
