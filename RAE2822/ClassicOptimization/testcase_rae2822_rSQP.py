@@ -11,10 +11,13 @@ from sqpoptimizer import *
 config = SU2.io.Config("optimization_RAE2822_orig.cfg")
 designparams = copy.deepcopy(config['DV_VALUE_OLD'])
 var = InputVariable(np.array(designparams),ArrayLabelReplacer("__X__"))
+
+pType_FDstep = Parameter(["0.001"+",0.001"*(len(designparams)-1)], LabelReplacer("__X__"))
+
 pType_direct = Parameter(["DIRECT"],LabelReplacer("__MATH_PROBLEM__"))
 pType_adjoint = Parameter(["DISCRETE_ADJOINT"],LabelReplacer("__MATH_PROBLEM__"))
 pType_mesh_filename_original = Parameter(["rae2822_ffd.su2"],LabelReplacer("__MESH_FILENAME__"))
-pType_mesh_filename_deformed = Parameter(["rae2822_ffd_inv_def.su2"],LabelReplacer("__MESH_FILENAME__"))
+pType_mesh_filename_deformed = Parameter(["rae2822_ffd_def.su2"],LabelReplacer("__MESH_FILENAME__"))
 
 pType_Iter_run = Parameter(["10"],LabelReplacer("__NUM_ITER__"))
 pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
@@ -24,13 +27,12 @@ pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 pType_ObjFun_DRAG = Parameter(["DRAG"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_LIFT = Parameter(["LIFT"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_MOMENT_Z = Parameter(["MOMENT_Z"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
-pType_ObjFun_MOMENT_Z = Parameter(["AIRFOIL_THICKNESS"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 ### END # DEFINE CONFIG, MESH, CONFIG LABELS #
 
 
 ### FOR MESH DEFORMATION ###
 meshDeformationRun = SU2MeshDeformationSkipFirstIteration("DEFORM","mpirun -n 4 SU2_DEF optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
-meshDeformationRun.addConfig("optimization_RAE2822_tmpl.cfg.cfg")
+meshDeformationRun.addConfig("optimization_RAE2822_tmpl.cfg")
 meshDeformationRun.addData("rae2822_ffd.su2")
 meshDeformationRun.addParameter(pType_direct)
 meshDeformationRun.addParameter(pType_Iter_run)
@@ -137,6 +139,7 @@ dotProductRunMomZ.addParameter(pType_hessian_passive)
 geometryFDRun = ExternalRun("GEOMETRY", "mpirun -n 4 SU2_GEO optimization_RAE2822_tmpl.cfg",True)
 geometryFDRun.addConfig("optimization_RAE2822_tmpl.cfg")
 geometryFDRun.addData("DEFORM/rae2822_ffd_def.su2")
+geometryFDRun.addParameter(pType_FDstep)
 geometryFDRun.addParameter(pType_direct)
 geometryFDRun.addParameter(pType_Iter_run)
 geometryFDRun.addParameter(pType_mesh_filename_deformed)
@@ -145,7 +148,7 @@ geometryFDRun.addParameter(pType_hessian_passive)
 ### END # FOR GEOMETRY CONSTRAINT ###
 
 ### Define Function and Constraints out of the runs ###
-fun = Function("DRAG","DIRECT/history.csv",TableReader(0,0,start=(-1,7),end=(None,None),delim=","))
+fun = Function("DRAG","DIRECT/history.csv",TableReader(0,0,start=(-1,8),end=(None,None),delim=","))
 fun.addInputVariable(var,"DOT_DRAG/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 fun.addValueEvalStep(meshDeformationRun)
 fun.addValueEvalStep(directRun)
@@ -153,22 +156,22 @@ fun.addGradientEvalStep(adjointRunDrag)
 fun.addGradientEvalStep(dotProductRunDrag)
 fun.addGradientEvalStep(hessianRunDrag)
 
-liftConstraint = Function("LIFT","DIRECT/history.csv",TableReader(0,0,start=(-1,8),end=(None,None),delim=","))
+liftConstraint = Function("LIFT","DIRECT/history.csv",TableReader(0,0,start=(-1,9),end=(None,None),delim=","))
 liftConstraint.addInputVariable(var,"DOT_LIFT/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 liftConstraint.addValueEvalStep(meshDeformationRun)
 liftConstraint.addValueEvalStep(directRun)
 liftConstraint.addGradientEvalStep(adjointRunLift)
 liftConstraint.addGradientEvalStep(dotProductRunLift)
 
-momentConstraint = Function("MOMENT_Z","DIRECT/history.csv",TableReader(0,0,start=(-1,12),end=(None,None),delim=","))
+momentConstraint = Function("MOMENT_Z","DIRECT/history.csv",TableReader(0,0,start=(-1,13),end=(None,None),delim=","))
 momentConstraint.addInputVariable(var,"DOT_MOMENT_Z/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 momentConstraint.addValueEvalStep(meshDeformationRun)
 momentConstraint.addValueEvalStep(directRun)
 momentConstraint.addGradientEvalStep(adjointRunMomZ)
 momentConstraint.addGradientEvalStep(dotProductRunMomZ)
 
-thicknessConstraint.Function("GEOMETRY","GEOMETRY/of_func.csv",TableReader(0,0,start=(-1,2),end=(None,None),delim=","))
-thicknessConstraint.addInputVariable(var,"GEOMETRY/of_grad.dat",TableReader(None,0,start=(1,2),end=(None,None)))
+thicknessConstraint = Function("GEOMETRY","GEOMETRY/of_func.csv",TableReader(0,0,start=(-1,1),end=(None,None),delim=","))
+thicknessConstraint.addInputVariable(var,"GEOMETRY/of_grad.csv",TableReader(None,0,start=(1,2),end=(None,None),delim=","))
 thicknessConstraint.addValueEvalStep(meshDeformationRun)
 thicknessConstraint.addValueEvalStep(geometryFDRun)
 thicknessConstraint.addGradientEvalStep(geometryFDRun)
@@ -191,13 +194,12 @@ directSolutionFilename = "DIRECT/solution_flow.dat"
 pathForDirectSolutionFilename = os.path.join(driver._workDir,directSolutionFilename)
 commandDirectSolution = "cp" + " " + pathForDirectSolutionFilename + " ."
 print("command 1: ", commandDirectSolution) 
-driver.setUserPostProcessFun(commandDirectSolution)
 
 adjointSolutionDRAG = "ADJOINT_DRAG/solution_adj_cd.dat"
 pathForAdjointSolutionDRAG = os.path.join(driver._workDir,adjointSolutionDRAG)
 commandAdjointSolutionDRAG = "cp" + " " + pathForAdjointSolutionDRAG + " ."
 print("command 2: ", commandAdjointSolutionDRAG)
-driver.setUserPostProcessGrad(commandAdjointSolutionDRAG)
+driver.setUserPostProcessGrad(commandDirectSolution + " && " + commandAdjointSolutionDRAG)
 
 adjointSolutionLIFT = "ADJOINT_LIFT/solution_adj_cl.dat"
 pathForAdjointSolutionLIFT = os.path.join(driver._workDir,adjointSolutionLIFT)
