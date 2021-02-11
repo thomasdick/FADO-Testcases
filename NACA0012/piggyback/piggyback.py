@@ -165,13 +165,10 @@ outputs = SQPconstrained(x0=x,
                          iter=maxIter,
                          acc=accu,
                          lsmode=mode,
-                         xb=xbounds)
+                         xb=xbounds,
+                         driver=driver)
 
 log.close()
 his.close()
   
 print ('Finished')
-
-
-
-

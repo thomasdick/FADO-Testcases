@@ -19,7 +19,7 @@ pType_adjoint = Parameter(["DISCRETE_ADJOINT"],LabelReplacer("__MATH_PROBLEM__")
 pType_mesh_filename_original = Parameter(["rae2822_ffd.su2"],LabelReplacer("__MESH_FILENAME__"))
 pType_mesh_filename_deformed = Parameter(["rae2822_ffd_def.su2"],LabelReplacer("__MESH_FILENAME__"))
 
-pType_Iter_run = Parameter(["10000"],LabelReplacer("__NUM_ITER__"))
+pType_Iter_run = Parameter(["10"],LabelReplacer("__NUM_ITER__"))
 pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
 pType_hessian_active = Parameter(["YES"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
@@ -27,6 +27,9 @@ pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 pType_ObjFun_DRAG = Parameter(["DRAG"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_LIFT = Parameter(["LIFT"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_MOMENT_Z = Parameter(["MOMENT_Z"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
+
+pType_OneShot_passive = Parameter(["NONE"], LabelReplacer("__ONESHOT_MODE__"))
+pType_OneShot_active = Parameter(["PIGGYBACK"], LabelReplacer("__ONESHOT_MODE__"))
 ### END # DEFINE CONFIG, MESH, CONFIG LABELS #
 
 
@@ -39,101 +42,50 @@ meshDeformationRun.addParameter(pType_Iter_run)
 meshDeformationRun.addParameter(pType_mesh_filename_original)
 meshDeformationRun.addParameter(pType_ObjFun_DRAG) #not actually needed, but used to make a valid config file
 meshDeformationRun.addParameter(pType_hessian_passive)
+meshDeformationRun.addParameter(pType_OneShot_passive)
 ### END # FOR MESH DEFORMATION ###
 
-### FOR FLOW SOLUTION ###
-directRun = ExternalSU2CFDSingleZoneDriverWithRestartOption("DIRECT","mpirun -n 4 SU2_CFD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
-directRun.addConfig("optimization_RAE2822_tmpl.cfg")
-directRun.addData("DEFORM/rae2822_ffd_def.su2")
-directRun.addData("solution_flow.dat") #dummy solution file
-directRun.addParameter(pType_direct)
-directRun.addParameter(pType_Iter_run)
-directRun.addParameter(pType_mesh_filename_deformed)
-directRun.addParameter(pType_ObjFun_DRAG)
-directRun.addParameter(pType_hessian_passive)
-### END # FOR FLOW SOLUTION ###
+### FOR FLOW AND ADJOINT DRAG OBJECTIVE FUNCTION ###
+combinedRun = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED","mpirun -n 4 SU2_CFD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
+combinedRun.addConfig("optimization_RAE2822_tmpl.cfg")
+combinedRun.addData("DEFORM/rae2822_ffd_def.su2")
+combinedRun.addData("solution_flow.dat") #has to be an actual solution file
+combinedRun.addData("solution_adj_cd.dat") #restart adj solution file
+combinedRun.addParameter(pType_adjoint)
+combinedRun.addParameter(pType_Iter_run)
+combinedRun.addParameter(pType_mesh_filename_deformed)
+combinedRun.addParameter(pType_ObjFun_DRAG)
+combinedRun.addParameter(pType_hessian_passive)
+combinedRun.addParameter(pType_OneShot_active)
+### END # FOR FLOW AND ADJOINT DRAG OBJECTIVE FUNCTION ###
 
-### FOR DRAG OBJECTIVE ADJOINT ###
-adjointRunDrag = ExternalSU2CFDDiscAdjSingleZoneDriverWithRestartOption("ADJOINT_DRAG","mpirun -n 4 SU2_CFD_AD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
-adjointRunDrag.addConfig("optimization_RAE2822_tmpl.cfg")
-adjointRunDrag.addData("DEFORM/rae2822_ffd_def.su2")
-adjointRunDrag.addData("DIRECT/solution_flow.dat")
-adjointRunDrag.addData("solution_adj_cd.dat") #dummy adj soluion file
-adjointRunDrag.addParameter(pType_adjoint)
-adjointRunDrag.addParameter(pType_Iter_run)
-adjointRunDrag.addParameter(pType_mesh_filename_deformed)
-adjointRunDrag.addParameter(pType_ObjFun_DRAG)
-adjointRunDrag.addParameter(pType_hessian_passive)
+### FOR FLOW AND ADJOINT LIFT CONSTRAINT ###
+combinedRunLift = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED_LIFT","mpirun -n 4 SU2_CFD_AD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
+combinedRunLift.addConfig("optimization_RAE2822_tmpl.cfg")
+combinedRunLift.addData("DEFORM/rae2822_ffd_def.su2")
+combinedRunLift.addData("solution_flow.dat") #has to be an actual solution file
+combinedRunLift.addData("solution_adj_cd.dat") #restart adj solution file
+combinedRunLift.addParameter(pType_adjoint)
+combinedRunLift.addParameter(pType_Iter_run)
+combinedRunLift.addParameter(pType_mesh_filename_deformed)
+combinedRunLift.addParameter(pType_ObjFun_LIFT)
+combinedRunLift.addParameter(pType_hessian_passive)
+combinedRunLift.addParameter(pType_OneShot_active)
+### END # FOR FLOW AND ADJOINT LIFT CONSTRAINT ###
 
-dotProductRunDrag = ExternalRun("DOT_DRAG","mpirun -n 4 SU2_DOT_AD optimization_RAE2822_tmpl.cfg",True)
-dotProductRunDrag.addConfig("optimization_RAE2822_tmpl.cfg")
-dotProductRunDrag.addData("DEFORM/rae2822_ffd_def.su2")
-dotProductRunDrag.addData("ADJOINT_DRAG/solution_adj_cd.dat")
-dotProductRunDrag.addParameter(pType_adjoint)
-dotProductRunDrag.addParameter(pType_Iter_run)
-dotProductRunDrag.addParameter(pType_mesh_filename_deformed)
-dotProductRunDrag.addParameter(pType_ObjFun_DRAG)
-dotProductRunDrag.addParameter(pType_hessian_passive)
-### END # FOR DRAG OBJECTIVE ADJOINT ###
-
-### FOR DRAG OBJECTIVE HESSIAN ###
-hessianRunDrag = ExternalSU2CFDDiscAdjSingleZoneDriverWithRestartOption("HESSIAN","mpirun -n 4 SU2_CFD_AD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
-hessianRunDrag.addConfig("optimization_RAE2822_tmpl.cfg")
-hessianRunDrag.addData("DEFORM/rae2822_ffd_def.su2")
-hessianRunDrag.addData("DIRECT/solution_flow.dat")
-hessianRunDrag.addData("ADJOINT_DRAG/solution_adj_cd.dat")
-hessianRunDrag.addParameter(pType_adjoint)
-hessianRunDrag.addParameter(pType_Iter_step)
-hessianRunDrag.addParameter(pType_mesh_filename_deformed)
-hessianRunDrag.addParameter(pType_ObjFun_DRAG)
-hessianRunDrag.addParameter(pType_hessian_active)
-### END # FOR DRAG OBJECTIVE HESSIAN ###
-
-### FOR LIFT CONSTRAINT ADJOINT ###
-adjointRunLift = ExternalSU2CFDDiscAdjSingleZoneDriverWithRestartOption("ADJOINT_LIFT","mpirun -n 4 SU2_CFD_AD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
-adjointRunLift.addConfig("optimization_RAE2822_tmpl.cfg")
-adjointRunLift.addData("DEFORM/rae2822_ffd_def.su2")
-adjointRunLift.addData("DIRECT/solution_flow.dat")
-adjointRunLift.addData("solution_adj_cl.dat") #dummy adj soluion file
-adjointRunLift.addParameter(pType_adjoint)
-adjointRunLift.addParameter(pType_Iter_run)
-adjointRunLift.addParameter(pType_mesh_filename_deformed)
-adjointRunLift.addParameter(pType_ObjFun_LIFT)
-adjointRunLift.addParameter(pType_hessian_passive)
-
-dotProductRunLift = ExternalRun("DOT_LIFT","mpirun -n 4 SU2_DOT_AD optimization_RAE2822_tmpl.cfg",True)
-dotProductRunLift.addConfig("optimization_RAE2822_tmpl.cfg")
-dotProductRunLift.addData("DEFORM/rae2822_ffd_def.su2")
-dotProductRunLift.addData("ADJOINT_LIFT/solution_adj_cl.dat")
-dotProductRunLift.addParameter(pType_adjoint)
-dotProductRunLift.addParameter(pType_Iter_run)
-dotProductRunLift.addParameter(pType_mesh_filename_deformed)
-dotProductRunLift.addParameter(pType_ObjFun_LIFT)
-dotProductRunLift.addParameter(pType_hessian_passive)
-### END # FOR LIFT CONSTRAINT ###
-
-### FOR MOMENTUM CONSTRAINT ADJOINT ###
-adjointRunMomZ = ExternalSU2CFDDiscAdjSingleZoneDriverWithRestartOption("ADJOINT_MOMENT_Z","mpirun -n 4 SU2_CFD_AD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
-adjointRunMomZ.addConfig("optimization_RAE2822_tmpl.cfg")
-adjointRunMomZ.addData("DEFORM/rae2822_ffd_def.su2")
-adjointRunMomZ.addData("DIRECT/solution_flow.dat")
-adjointRunMomZ.addData("solution_adj_cmz.dat") #dummy adj soluion file
-adjointRunMomZ.addParameter(pType_adjoint)
-adjointRunMomZ.addParameter(pType_Iter_run)
-adjointRunMomZ.addParameter(pType_mesh_filename_deformed)
-adjointRunMomZ.addParameter(pType_ObjFun_MOMENT_Z)
-adjointRunMomZ.addParameter(pType_hessian_passive)
-
-dotProductRunMomZ = ExternalRun("DOT_MOMENT_Z","mpirun -n 4 SU2_DOT_AD optimization_RAE2822_tmpl.cfg",True)
-dotProductRunMomZ.addConfig("optimization_RAE2822_tmpl.cfg")
-dotProductRunMomZ.addData("DEFORM/rae2822_ffd_def.su2")
-dotProductRunMomZ.addData("ADJOINT_MOMENT_Z/solution_adj_cmz.dat")
-dotProductRunMomZ.addParameter(pType_adjoint)
-dotProductRunMomZ.addParameter(pType_Iter_run)
-dotProductRunMomZ.addParameter(pType_mesh_filename_deformed)
-dotProductRunMomZ.addParameter(pType_ObjFun_MOMENT_Z)
-dotProductRunMomZ.addParameter(pType_hessian_passive)
-### END # FOR MOMENTUM CONSTRAINT ###
+### FOR FLOW AND ADJOINT MOMENTUM CONSTRAINT ###
+combinedRunMomZ = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED_MOMENT_Z","mpirun -n 4 SU2_CFD_AD optimization_RAE2822_tmpl.cfg",True,"optimization_RAE2822_tmpl.cfg")
+combinedRunMomZ.addConfig("optimization_RAE2822_tmpl.cfg")
+combinedRunMomZ.addData("DEFORM/rae2822_ffd_def.su2")
+combinedRunMomZ.addData("solution_flow.dat") #has to be an actual solution file
+combinedRunMomZ.addData("solution_adj_cmz.dat") #restart adj solution file
+combinedRunMomZ.addParameter(pType_adjoint)
+combinedRunMomZ.addParameter(pType_Iter_run)
+combinedRunMomZ.addParameter(pType_mesh_filename_deformed)
+combinedRunMomZ.addParameter(pType_ObjFun_MOMENT_Z)
+combinedRunMomZ.addParameter(pType_hessian_passive)
+combinedRunMomZ-addParameter(pType_OneShot_active)
+### END # FOR FLOW AND ADJOINT MOMENTUM CONSTRAINT ###
 
 ### FOR GEOMETRY CONSTRAINT ###
 geometryFDRun = ExternalRun("GEOMETRY", "mpirun -n 4 SU2_GEO optimization_RAE2822_tmpl.cfg",True)
@@ -148,22 +100,19 @@ geometryFDRun.addParameter(pType_hessian_passive)
 ### END # FOR GEOMETRY CONSTRAINT ###
 
 ### Define Function and Constraints out of the runs ###
-fun = Function("DRAG","DIRECT/history.csv",TableReader(0,0,start=(-1,8),end=(None,None),delim=","))
-fun.addInputVariable(var,"DOT_DRAG/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
+fun = Function("DRAG","COMBINED/history.csv",TableReader(0,0,start=(-1,8),end=(None,None),delim=","))
+fun.addInputVariable(var,"COMBINED/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 fun.addValueEvalStep(meshDeformationRun)
-fun.addValueEvalStep(directRun)
-fun.addGradientEvalStep(adjointRunDrag)
-fun.addGradientEvalStep(dotProductRunDrag)
-fun.addGradientEvalStep(hessianRunDrag)
+fun.addValueEvalStep(combinedRun)
 
-liftConstraint = Function("LIFT","DIRECT/history.csv",TableReader(0,0,start=(-1,9),end=(None,None),delim=","))
+liftConstraint = Function("LIFT","COMBINED/history.csv",TableReader(0,0,start=(-1,9),end=(None,None),delim=","))
 liftConstraint.addInputVariable(var,"DOT_LIFT/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 liftConstraint.addValueEvalStep(meshDeformationRun)
 liftConstraint.addValueEvalStep(directRun)
 liftConstraint.addGradientEvalStep(adjointRunLift)
 liftConstraint.addGradientEvalStep(dotProductRunLift)
 
-momentConstraint = Function("MOMENT_Z","DIRECT/history.csv",TableReader(0,0,start=(-1,13),end=(None,None),delim=","))
+momentConstraint = Function("MOMENT_Z","COMBINED/history.csv",TableReader(0,0,start=(-1,13),end=(None,None),delim=","))
 momentConstraint.addInputVariable(var,"DOT_MOMENT_Z/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 momentConstraint.addValueEvalStep(meshDeformationRun)
 momentConstraint.addValueEvalStep(directRun)
@@ -190,24 +139,24 @@ driver.addUpperBound(momentConstraint, 0.093, 1.0)
 driver.addLowerBound(thicknessConstraint, 0.12, 1.0)
 
 ### Postprocess command ###
-directSolutionFilename = "DIRECT/solution_flow.dat"
+directSolutionFilename = "COMBINED/solution_flow.dat"
 pathForDirectSolutionFilename = os.path.join(driver._workDir,directSolutionFilename)
 commandDirectSolution = "cp" + " " + pathForDirectSolutionFilename + " ."
 print("command 1: ", commandDirectSolution) 
 
-adjointSolutionDRAG = "ADJOINT_DRAG/solution_adj_cd.dat"
+adjointSolutionDRAG = "COMBINED/solution_adj_cd.dat"
 pathForAdjointSolutionDRAG = os.path.join(driver._workDir,adjointSolutionDRAG)
 commandAdjointSolutionDRAG = "cp" + " " + pathForAdjointSolutionDRAG + " ."
 print("command 2: ", commandAdjointSolutionDRAG)
-driver.setUserPostProcessGrad(commandDirectSolution + " && " + commandAdjointSolutionDRAG)
+driver.setUserPostProcessGrad(commandDirectSolution + "&&" + commandAdjointSolutionDRAG)
 
-adjointSolutionLIFT = "ADJOINT_LIFT/solution_adj_cl.dat"
+adjointSolutionLIFT = "COMBINED_LIFT/solution_adj_cl.dat"
 pathForAdjointSolutionLIFT = os.path.join(driver._workDir,adjointSolutionLIFT)
 commandAdjointSolutionLIFT = "cp" + " " + pathForAdjointSolutionLIFT + " ."
 print("command 3: ", commandAdjointSolutionLIFT)
 driver.setUserPostProcessEqConGrad(commandAdjointSolutionLIFT)
 
-adjointSolutionMOMZ = "ADJOINT_MOMENT_Z/solution_adj_cmz.dat"
+adjointSolutionMOMZ = "COMBINED_MOMENT_Z/solution_adj_cmz.dat"
 pathForAdjointSolutionMOMZ = os.path.join(driver._workDir,adjointSolutionMOMZ)
 commandAdjointSolutionMOMZ = "cp" + " " + pathForAdjointSolutionMOMZ + " ."
 print("command 4: ", commandAdjointSolutionMOMZ)
@@ -262,7 +211,3 @@ log.close()
 his.close()
   
 print ('Finished')
-
-
-
-
