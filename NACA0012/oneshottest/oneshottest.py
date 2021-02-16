@@ -23,7 +23,7 @@ pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 
 pType_ObjFun_DRAG = Parameter(["DRAG"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 
-pType_Iter_run = Parameter(["1000"],LabelReplacer("__NUM_ITER__"))
+pType_Iter_run = Parameter(["250"],LabelReplacer("__NUM_ITER__"))
 pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
 
 pType_OneShot_passive = Parameter(["NONE"], LabelReplacer("__ONESHOT_MODE__"))
