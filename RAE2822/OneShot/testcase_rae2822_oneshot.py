@@ -108,17 +108,17 @@ geometryFDRun.addParameter(pType_OneShot_passive)
 ### END # FOR GEOMETRY CONSTRAINT ###
 
 ### Define Function and Constraints out of the runs ###
-fun = Function("DRAG","COMBINED/history.csv",TableReader(0,0,start=(-1,12),end=(None,None),delim=","))
+fun = Function("DRAG","COMBINED/history.csv",TableReader(0,0,start=(-1,14),end=(None,None),delim=","))
 fun.addInputVariable(var,"COMBINED/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 fun.addValueEvalStep(meshDeformationRun)
 fun.addValueEvalStep(combinedRun)
 
-liftConstraint = Function("LIFT","COMBINED/history.csv",TableReader(0,0,start=(-1,13),end=(None,None),delim=","))
+liftConstraint = Function("LIFT","COMBINED/history.csv",TableReader(0,0,start=(-1,15),end=(None,None),delim=","))
 liftConstraint.addInputVariable(var,"COMBINED_LIFT/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 liftConstraint.addValueEvalStep(meshDeformationRun)
 liftConstraint.addGradientEvalStep(combinedRunLift)
 
-momentConstraint = Function("MOMENT_Z","COMBINED/history.csv",TableReader(0,0,start=(-1,17),end=(None,None),delim=","))
+momentConstraint = Function("MOMENT_Z","COMBINED/history.csv",TableReader(0,0,start=(-1,19),end=(None,None),delim=","))
 momentConstraint.addInputVariable(var,"COMBINED_MOMENT_Z/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 momentConstraint.addValueEvalStep(meshDeformationRun)
 momentConstraint.addGradientEvalStep(combinedRunMomZ)
