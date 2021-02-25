@@ -16,7 +16,7 @@ pType_FDstep = Parameter(["0.001"+",0.001"*(len(designparams)-1)], LabelReplacer
 
 pType_direct = Parameter(["DIRECT"],LabelReplacer("__MATH_PROBLEM__"))
 pType_adjoint = Parameter(["DISCRETE_ADJOINT"],LabelReplacer("__MATH_PROBLEM__"))
-pType_mesh_filename_original = Parameter(["str3_ffdhand.su2"],LabelReplacer("__MESH_FILENAME__"))
+pType_mesh_filename_original = Parameter(["str3_ffdnew.su2"],LabelReplacer("__MESH_FILENAME__"))
 pType_mesh_filename_deformed = Parameter(["str3_deform.su2"],LabelReplacer("__MESH_FILENAME__"))
 
 pType_Iter_run = Parameter(["8000"],LabelReplacer("__NUM_ITER__"))
@@ -32,7 +32,7 @@ pType_ObjFun_LIFT = Parameter(["LIFT"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 ### FOR MESH DEFORMATION ###
 meshDeformationRun = SU2MeshDeformationSkipFirstIteration("DEFORM","mpirun -n 1 SU2_DEF config_tmpl.cfg",True,"config_tmpl.cfg")
 meshDeformationRun.addConfig("config_tmpl.cfg")
-meshDeformationRun.addData("str3_ffdhand.su2")
+meshDeformationRun.addData("str3_ffdnew.su2")
 meshDeformationRun.addParameter(pType_direct)
 meshDeformationRun.addParameter(pType_Iter_run)
 meshDeformationRun.addParameter(pType_mesh_filename_original)
