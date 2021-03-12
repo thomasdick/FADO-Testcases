@@ -19,7 +19,7 @@ pType_adjoint = Parameter(["DISCRETE_ADJOINT"],LabelReplacer("__MATH_PROBLEM__")
 pType_mesh_filename_original = Parameter(["rae2822_ffd.su2"],LabelReplacer("__MESH_FILENAME__"))
 pType_mesh_filename_deformed = Parameter(["rae2822_ffd_def.su2"],LabelReplacer("__MESH_FILENAME__"))
 
-pType_Iter_run = Parameter(["10"],LabelReplacer("__NUM_ITER__"))
+pType_Iter_run = Parameter(["100"],LabelReplacer("__NUM_ITER__"))
 pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
 pType_hessian_active = Parameter(["YES"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
