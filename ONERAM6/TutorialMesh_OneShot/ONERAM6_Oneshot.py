@@ -209,7 +209,8 @@ outputs = SQPconstrained(x0=x,
                          acc=accu,
                          lsmode=mode,
                          xb=xbounds,
-                         driver=driver)
+                         driver=driver,
+                         feasibility_tolerance=1e-9)
 
 log.close()
 his.close()
