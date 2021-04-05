@@ -92,12 +92,12 @@ geometryFDRun.addParameter(pType_OneShot_passive)
 ### END # FOR GEOMETRY CONSTRAINT ###
 
 ### Define Function and Constraints out of the runs ###
-fun = Function("DRAG","COMBINED/history.dat",TableReader(0,0,start=(-1,15),end=(None,None),delim=","))
+fun = Function("DRAG","COMBINED/history.dat",TableReader(0,0,start=(-1,17),end=(None,None),delim=","))
 fun.addInputVariable(var,"COMBINED/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 fun.addValueEvalStep(meshDeformationRun)
 fun.addValueEvalStep(combinedRun)
 
-liftConstraint = Function("LIFT","COMBINED_LIFT/history.dat",TableReader(0,0,start=(-1,16),end=(None,None),delim=","))
+liftConstraint = Function("LIFT","COMBINED_LIFT/history.dat",TableReader(0,0,start=(-1,18),end=(None,None),delim=","))
 liftConstraint.addInputVariable(var,"COMBINED_LIFT/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 liftConstraint.addValueEvalStep(meshDeformationRun)
 liftConstraint.addValueEvalStep(combinedRunLift)
