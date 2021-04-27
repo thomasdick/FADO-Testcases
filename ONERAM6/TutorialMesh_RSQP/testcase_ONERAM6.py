@@ -234,6 +234,11 @@ driver.setConstraintGradientEvalMode(False)
 
 driver.hessian_eval_parameters("HESSIAN", "of_hess.dat")
 
+conf = RSQPconfig()
+conf.hybrid_sobolev=True
+conf.bfgs = optimize.BFGS(exception_strategy='damp_update', init_scale=1.0)
+conf.bfgs.initialize(len(x),'hess')
+
 outputs = SQPconstrained(x0=x,
                          func=driver.fun,
                          f_eqcons= driver.eq_cons,
@@ -245,6 +250,7 @@ outputs = SQPconstrained(x0=x,
                          iter=maxIter,
                          acc=accu,
                          lsmode=mode,
+                         config=conf,
                          xb=xbounds,
                          driver=driver)
 

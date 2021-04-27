@@ -197,6 +197,8 @@ driver.setConstraintGradientEvalMode(False)
 
 driver.hessian_eval_parameters("COMBINED", "of_hess.dat")
 
+conf = RSQPconfig()
+
 outputs = SQPconstrained(x0=x,
                          func=driver.fun,
                          f_eqcons= driver.eq_cons,
@@ -208,6 +210,7 @@ outputs = SQPconstrained(x0=x,
                          iter=maxIter,
                          acc=accu,
                          lsmode=mode,
+                         config=conf,
                          xb=xbounds,
                          driver=driver)
 

@@ -22,7 +22,7 @@ pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 
 pType_ObjFun_DRAG = Parameter(["DRAG"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_LIFT = Parameter(["LIFT"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
-pType_Iter_run = Parameter(["100"],LabelReplacer("__NUM_ITER__"))
+pType_Iter_run = Parameter(["10"],LabelReplacer("__NUM_ITER__"))
 pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
 
 pType_OneShot_passive = Parameter(["NONE"], LabelReplacer("__ONESHOT_MODE__"))
@@ -137,7 +137,12 @@ eps = 1.0e-10
 
 driver.setConstraintGradientEvalMode(False)
 
-driver.hessian_eval_parameters("DIRECT", "of_hess.dat")
+driver.hessian_eval_parameters("COMBINED", "of_hess.dat")
+
+conf = RSQPconfig()
+conf.hybrid_sobolev=True
+conf.bfgs = optimize.BFGS(exception_strategy='damp_update', init_scale=1.0)
+conf.bfgs.initialize(len(x),'hess')
 
 outputs = SQPconstrained(x0=x,
                          func=driver.fun,
@@ -150,6 +155,7 @@ outputs = SQPconstrained(x0=x,
                          iter=maxIter,
                          acc=accu,
                          lsmode=mode,
+                         config=conf,
                          xb=xbounds,
                          driver=driver)
 
