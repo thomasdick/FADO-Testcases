@@ -143,6 +143,7 @@ conf = RSQPconfig()
 conf.hybrid_sobolev=True
 conf.bfgs = optimize.BFGS(exception_strategy='damp_update', init_scale=1.0)
 conf.bfgs.initialize(len(x),'hess')
+conf.meritfunction=True
 
 outputs = SQPconstrained(x0=x,
                          func=driver.fun,
