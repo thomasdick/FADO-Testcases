@@ -188,6 +188,7 @@ conf.lb = config.OPT_BOUND_LOWER
 conf.ub = config.OPT_BOUND_UPPER
 conf.lower = np.array([0.0, 0.0])
 conf.upper = np.array([100.0, 100.0])
+conf.eps3=0.0
 
 outputs = Ipoptimizer(x0=x,
                       func=driver.fun,
@@ -196,7 +197,7 @@ outputs = Ipoptimizer(x0=x,
                       fprime=driver.grad,
                       fprime_eqcons= driver.eq_cons_grad,
                       fprime_ieqcons= driver.ieq_cons_grad,
-                      fdotdot= driver.hess,
+                      fdotdot= None,
                       config=conf)
 
 log.close()

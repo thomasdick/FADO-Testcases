@@ -199,16 +199,14 @@ driver.hessian_eval_parameters("COMBINED", "of_hess.dat")
 
 conf = RSQPconfig()
 conf.hybrid_sobolev=True
-conf.bfgs = optimize.BFGS(exception_strategy='damp_update', init_scale=1.0)
-conf.bfgs.initialize(len(x),'hess')
 
 outputs = SQPconstrained(x0=x,
                          func=driver.fun,
                          f_eqcons= driver.eq_cons,
-                         f_ieqcons= [],
+                         f_ieqcons= driver.ieq_cons,
                          fprime=driver.grad,
                          fprime_eqcons= driver.eq_cons_grad,
-                         fprime_ieqcons= [],
+                         fprime_ieqcons= driver.ieq_cons_grad,
                          fdotdot= driver.hess,
                          iter=maxIter,
                          acc=accu,
