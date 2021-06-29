@@ -48,7 +48,7 @@ meshDeformationRun.addParameter(pType_OneShot_passive)
 ### END # FOR MESH DEFORMATION ###
 
 ### FOR FLOW AND ADJOINT DRAG OBJECTIVE FUNCTION ###
-combinedRun = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED","mpirun -n 16 SU2_CFD config_opt_tmpl.cfg",True,"config_opt_tmpl.cfg")
+combinedRun = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED","mpirun -n 16 SU2_CFD_AD config_opt_tmpl.cfg",True,"config_opt_tmpl.cfg")
 combinedRun.addConfig("config_opt_tmpl.cfg")
 combinedRun.addData("DEFORM/onera_orig_deform.su2")
 combinedRun.addData("solution_flow.dat") #has to be an actual solution file
@@ -66,8 +66,8 @@ combinedRun.addParameter(pType_OneShot_active)
 combinedRunLift = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED_LIFT","mpirun -n 16 SU2_CFD_AD config_opt_tmpl.cfg",True,"config_opt_tmpl.cfg")
 combinedRunLift.addConfig("config_opt_tmpl.cfg")
 combinedRunLift.addData("DEFORM/onera_orig_deform.su2")
-combinedRunLift.addData("DIRECT/solution_flow.dat")
-combinedRunLift.addData("solution_adj_cl.dat") #dummy adj soluion file
+combinedRunLift.addData("solution_flow.dat") #has to be an actual solution file
+combinedRunLift.addData("solution_adj_cl.dat") #restart adj solution file
 combinedRunLift.addParameter(pType_adjoint)
 combinedRunLift.addParameter(pType_Iter_run)
 combinedRunLift.addParameter(pType_mesh_filename_deformed)
@@ -98,9 +98,9 @@ fun.addValueEvalStep(meshDeformationRun)
 fun.addValueEvalStep(combinedRun)
 
 liftConstraint = Function("LIFT","COMBINED_LIFT/history.dat",TableReader(0,0,start=(-1,18),end=(None,None),delim=","))
-liftConstraint.addInputVariable(var,"COMBINED_LIFT/of_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
+liftConstraint.addInputVariable(var,"COMBINED_LIFT/orig_grad.dat",TableReader(0,None,start=(0,0),end=(None,None),delim=","))
 liftConstraint.addValueEvalStep(meshDeformationRun)
-liftConstraint.addGradientEvalStep(combinedRunLift)
+liftConstraint.addValueEvalStep(combinedRunLift)
 
 thicknessConstraint1 = Function("GEOMETRY","GEOMETRY/of_func.dat",TableReader(0,0,start=(-1,18),end=(None,None),delim=","))
 thicknessConstraint1.addInputVariable(var,"GEOMETRY/of_grad.dat",TableReader(None,0,start=(4,19),end=(None,None),delim=","))
