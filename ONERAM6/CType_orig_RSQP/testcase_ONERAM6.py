@@ -124,7 +124,7 @@ geometryFDRun.addParameter(pType_hessian_passive)
 ### END # FOR GEOMETRY CONSTRAINT ###
 
 ### Define Function and Constraints out of the runs ###
-fun = Function("DRAG","DIRECT/history.dat",TableReader(0,0,start=(-1,11),end=(None,None),delim=","))
+fun = Function("DRAG","DIRECT/history.dat",TableReader(0,0,start=(-1,10),end=(None,None),delim=","))
 fun.addInputVariable(var,"DOT_DRAG/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 fun.addValueEvalStep(meshDeformationRun)
 fun.addValueEvalStep(directRun)
@@ -132,7 +132,7 @@ fun.addGradientEvalStep(adjointRunDrag)
 fun.addGradientEvalStep(dotProductRunDrag)
 fun.addGradientEvalStep(hessianRunDrag)
 
-liftConstraint = Function("LIFT","DIRECT/history.dat",TableReader(0,0,start=(-1,12),end=(None,None),delim=","))
+liftConstraint = Function("LIFT","DIRECT/history.dat",TableReader(0,0,start=(-1,11),end=(None,None),delim=","))
 liftConstraint.addInputVariable(var,"DOT_LIFT/of_grad.dat",TableReader(None,0,start=(1,0),end=(None,None)))
 liftConstraint.addValueEvalStep(meshDeformationRun)
 liftConstraint.addValueEvalStep(directRun)
