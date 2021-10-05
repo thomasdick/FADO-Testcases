@@ -23,13 +23,12 @@ pType_hessian_passive = Parameter(["NO"],LabelReplacer("__ACTIVATE_HESSIAN__"))
 pType_ObjFun_DRAG = Parameter(["DRAG"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_ObjFun_LIFT = Parameter(["LIFT"],LabelReplacer("__OBJECTIVE_FUNCTION__"))
 pType_Iter_run = Parameter(["10"],LabelReplacer("__NUM_ITER__"))
-pType_Iter_step = Parameter(["1"],LabelReplacer("__NUM_ITER__"))
 
 pType_OneShot_passive = Parameter(["NONE"], LabelReplacer("__ONESHOT_MODE__"))
 pType_OneShot_active = Parameter(["PIGGYBACK"], LabelReplacer("__ONESHOT_MODE__"))
 
 ### FOR MESH DEFORMATION ###
-meshDeformationRun = SU2MeshDeformationSkipFirstIteration("DEFORM","mpirun -n 4 SU2_DEF naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
+meshDeformationRun = SU2MeshDeformationSkipFirstIteration("DEFORM","mpirun -n 12 SU2_DEF naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
 meshDeformationRun.addConfig("naca0012_config_tmpl.cfg")
 meshDeformationRun.addData("mesh_NACA0012_inv.su2")
 meshDeformationRun.addParameter(pType_direct)
@@ -41,7 +40,7 @@ meshDeformationRun.addParameter(pType_OneShot_passive)
 ### END # FOR MESH DEFORMATION ###
 
 ### FOR FLOW AND ADJOINT DRAG SOLUTION ###
-combinedRun = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED","mpirun -n 4 SU2_CFD_AD naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
+combinedRun = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED","mpirun -n 12 SU2_CFD_AD naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
 combinedRun.addConfig("naca0012_config_tmpl.cfg")
 combinedRun.addData("DEFORM/mesh_NACA0012_inv_def.su2")
 combinedRun.addData("solution_flow.dat") #has to be an actual solution file
@@ -55,7 +54,7 @@ combinedRun.addParameter(pType_OneShot_active)
 ### END # FOR FLOW AND ADJOINT SOLUTION ###
 
 ### FOR FLOW AND ADJOINT LIFT SOLUTION ###
-combinedRunLift = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED_LIFT","mpirun -n 4 SU2_CFD_AD naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
+combinedRunLift = ExternalSU2CFDOneShotSingleZoneDriverWithRestartOption("COMBINED_LIFT","mpirun -n 12 SU2_CFD_AD naca0012_config_tmpl.cfg",True,"naca0012_config_tmpl.cfg")
 combinedRunLift.addConfig("naca0012_config_tmpl.cfg")
 combinedRunLift.addData("DEFORM/mesh_NACA0012_inv_def.su2")
 combinedRunLift.addData("solution_flow.dat") #has to be an actual solution file
@@ -88,7 +87,7 @@ this_obj = def_objs.keys()[0]
 sign  = SU2.io.get_objectiveSign(this_obj)
 
 driver.addObjective("min", fun, sign)
-driver.addEquality(liftConstraint, 0.4, 1.0)
+driver.addEquality(liftConstraint, 0.326931, 1.0)
 
 ### Postprocess command ###
 directSolutionFilename = "COMBINED/solution_flow.dat"
@@ -140,10 +139,8 @@ driver.setConstraintGradientEvalMode(False)
 driver.hessian_eval_parameters("COMBINED", "of_hess.dat")
 
 conf = RSQPconfig()
-conf.hybrid_sobolev=True
-conf.bfgs = optimize.BFGS(exception_strategy='damp_update', init_scale=1.0)
-conf.bfgs.initialize(len(x),'hess')
-conf.meritfunction=True
+conf.hybrid_sobolev=False
+#conf.epsilon3=0.1
 
 outputs = SQPconstrained(x0=x,
                          func=driver.fun,
